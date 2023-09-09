@@ -104,10 +104,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _buildBarometerDisplay(
       Stream<double> stream, double pZero, BarometerProvider provider) {
     if (!_pressureAvailable) {
-      return Text(
-        'No pressure sensure found',
-        style: Theme.of(context).textTheme.headlineMedium,
-      );
+      return Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+            Text(
+              'No pressure sensure found',
+              style: Theme.of(context).textTheme.headlineMedium,
+            )
+          ]));
     } else {
       return Expanded(
         child: Column(
