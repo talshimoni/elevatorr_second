@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:enviro_sensors/enviro_sensors.dart';
+import 'package:environment_sensors/environment_sensors.dart';
 import './data/barometer_provider.dart';
 import './data/flicker_provider.dart';
 
@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
@@ -49,11 +49,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Stream<BarometerEvent> _tryStream;
-  Stream<String> _flickerStream;
   double pZeroMock = 1013.25;
-  bool hasPlatformException = false;
-  bool hasOtherError = false;
+  Stream<String>? _flickerStream;
+  bool _pressureAvailable = false;
+  final environmentSensors = EnvironmentSensors();
 
   _PatternVibrate() {
     HapticFeedback.mediumImpact();
@@ -79,13 +78,22 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    try {
-      _tryStream = barometerEvents.asBroadcastStream();
-    } on PlatformException {
-      hasPlatformException = true;
-    } catch (error) {
-      hasOtherError = true;
-    }
+    environmentSensors.pressure.listen((pressure) {
+      print(pressure.toString());
+    });
+    initPlatformState();
+  }
+
+  // Platform messages are asynchronous, so we initialize in an async method.
+  Future<void> initPlatformState() async {
+    bool pressureAvailable;
+
+    pressureAvailable =
+        await environmentSensors.getSensorAvailable(SensorType.Pressure);
+
+    setState(() {
+      _pressureAvailable = pressureAvailable;
+    });
   }
 
   @override
@@ -94,16 +102,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildBarometerDisplay(
-      Stream<BarometerEvent> stream, double pZero, BarometerProvider provider) {
-    if (hasPlatformException) {
+      Stream<double> stream, double pZero, BarometerProvider provider) {
+    if (!_pressureAvailable) {
       return Text(
-        'Platform Exception!',
-        style: Theme.of(context).textTheme.display1,
-      );
-    } else if (hasOtherError) {
-      return Text(
-        'Unexpected Error!',
-        style: Theme.of(context).textTheme.display1,
+        'No pressure sensure found',
+        style: Theme.of(context).textTheme.headlineMedium,
       );
     } else {
       return Expanded(
@@ -119,11 +122,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ElevationDifferenceStreamBuilder(
               pressureStream: stream,
-              pZero: provider.previousReading ?? pZero,
+              pZero: pZeroMock,
               flickerStream: _flickerStream,
             ),
             Builder(
-                builder: (BuildContext ctx) => RaisedButton(
+                builder: (BuildContext ctx) => ElevatedButton(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 12),
@@ -134,9 +137,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               fontSize: 20),
                         ),
                       ),
-                      color: Color.fromRGBO(96, 99, 240, 1.0),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(35.0)),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Color.fromRGBO(96, 99, 240, 1.0),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(35.0))),
                       onPressed: () {
                         try {
                           provider.resetPZeroValue();
@@ -147,10 +151,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               label: 'Dismiss',
                               textColor: Colors.white,
                               onPressed: () {
-                                Scaffold.of(ctx).hideCurrentSnackBar();
+                                ScaffoldMessenger.of(ctx).hideCurrentSnackBar();
                               },
                             ),
-                            backgroundColor: Theme.of(ctx).errorColor,
+                            backgroundColor: Theme.of(ctx).colorScheme.error,
                             content: Row(
                               children: <Widget>[
                                 Icon(Icons.error),
@@ -161,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ],
                             ),
                           );
-                          Scaffold.of(ctx).showSnackBar(snackBar);
+                          ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
                         }
                       },
                     )),
@@ -186,7 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Column(
           children: <Widget>[
-            _buildBarometerDisplay(_tryStream, pZeroMock, barometerProvider),
+            _buildBarometerDisplay(
+                environmentSensors.pressure, pZeroMock, barometerProvider),
           ],
         ),
       ),
@@ -201,5 +206,3 @@ class _MyHomePageState extends State<MyHomePage> {
     return value < 99;
   }
 }
-
-
