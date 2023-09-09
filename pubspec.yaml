@@ -1,5 +1,8 @@
 name: elevatorr_second
 description: A barometer based altimeter.
+compileSdkVersion: 33
+targetSdkVersion: 30
+minSdkVersion: 19
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -11,21 +14,21 @@ description: A barometer based altimeter.
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.0.0+3
+version: 2.0.0+3
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  provider: ^4.0.4
-  sensors: ^0.4.1+8
-  enviro_sensors: ^0.0.1
+  provider: ^6.0.5
+  sensors_plus: ^3.0.3
+  environment_sensors: ^0.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.2
+  cupertino_icons: ^1.0.6
 
 dev_dependencies:
   flutter_test:
