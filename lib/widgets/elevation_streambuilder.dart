@@ -41,12 +41,11 @@ class ElevationDifferenceStreamBuilder extends StatelessWidget {
                 case ConnectionState.waiting:
                   return Text('awaiting interaction');
                 case ConnectionState.active:
-                  final double heightDiff =
-                      (log((snap.data!) / (_pZero))) * -8434.356429;
-                  final String displayHeightDiff =
-                      (heightDiff).toStringAsFixed(1);
+                  final double altitude = 44330 *
+                      ((1 - pow((snap.data! / _pZero), (1 / 5.255))) as double);
+                  final String displayAltitude = (altitude).toStringAsFixed(1);
                   barometerProvider.setPreviousReading(snap.data!);
-                  flickerProvider.changingElevationDiff = heightDiff;
+                  flickerProvider.changingElevationDiff = altitude;
 
                   return Column(
                     children: <Widget>[
@@ -63,7 +62,7 @@ class ElevationDifferenceStreamBuilder extends StatelessWidget {
                         directionString: "Ascending",
                       ),
                       Text(
-                        '${displayHeightDiff}m',
+                        '${displayAltitude}m',
                         style: TextStyle(color: Colors.black87, fontSize: 40),
                       ),
                       FlickeringIcon(
